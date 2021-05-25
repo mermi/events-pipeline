@@ -22,3 +22,6 @@ logs/
 unittests.cfg
 airflow-webserver.pid
 webserver_config.py
+
+# postgres
+postgres_data/
