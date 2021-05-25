@@ -1,0 +1,69 @@
+version: '3.7'
+services:
+    postgres:
+        image: postgres:11.6
+        environment:
+            - POSTGRES_USER=flink
+            - POSTGRES_PASSWORD=pwd
+            - POSTGRES_DB=flink
+        volumes:
+            - ./postgres_data:/var/lib/postgresql/data
+        ports:
+            - 5432:5432
+        logging:
+            options:
+                max-size: 10m
+                max-file: "3"
+
+    webserver:
+        image: flink:latest
+        build: .
+        restart: always
+        depends_on:
+            - postgres
+        environment:
+            - STAGE=dev
+            - POSTGRES_HOST=postgres
+            - POSTGRES_USER=flink
+            - POSTGRES_PASSWORD=pwd
+            - POSTGRES_DB=flink
+            - POSTGRES_PORT=5432
+            - FERNET_KEY=NT11xtNNYFT8ERRnNagI3U8Ljam87IdzeAUowzg0BDc= # in staging/production this need to go to secrets
+            - WEB_SERVER_SECRET=f3ca0b3b85f540e1b2b72ad2021815e2
+            # overwrite default values for local development
+            - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+            - AIRFLOW__SCHEDULER__DAG_DIR_LIST_INTERVAL=15
+            - AIRFLOW__WEBSERVER__WORKERS=2
+            - AIRFLOW__METRICS__STATSD_ON=False
+            - AIRFLOW__LOGGING__REMOTE_LOGGING=False
+        logging:
+            options:
+                max-size: 10m
+                max-file: "3"
+        volumes:
+            - ./dags:/usr/local/airflow/dags
+            - ./shared_utils:/usr/local/airflow/shared_utils
+            - ./sql:/usr/local/airflow/sql
+        ports:
+            - 8080:8080
+        command: webserver
+        healthcheck:
+            test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+            interval: 30s
+            timeout: 30s
+            retries: 6
+
+    init:
+        image: flink:latest
+        command: airflow users create --username admin --password admin --firstname admin --lastname admin --role Admin --email admin@admin.org
+        depends_on:
+            webserver:
+                condition: service_healthy
+        environment:
+            - STAGE=dev
+            - POSTGRES_HOST=postgres
+            - POSTGRES_USER=flink
+            - POSTGRES_PASSWORD=pwd
+            - POSTGRES_DB=flink
+            - POSTGRES_PORT=5432
+            - AIRFLOW__LOGGING__REMOTE_LOGGING=False
