@@ -1,0 +1,11 @@
+#!/bin/sh
+
+source local/.env
+
+echo "Your AIRFLOW_HOME is $AIRFLOW_HOME"
+
+# overwrite variables when initializing
+export AIRFLOW__CORE__LOAD_EXAMPLES=false
+
+make clear-local
+airflow db init
