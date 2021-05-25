@@ -1,14 +1,18 @@
 import datetime
 import logging
+from shared_utils.load_json_data import load_json_postgres
 
 from airflow import DAG
 from airflow.operators.python import PythonOperator
+from airflow.providers.postgres.operators.postgres import PostgresHook
 
 from shared_utils.schema_verification import validate_data as validator
+from shared_utils.dag_utils.utils import get_query as get_query
+from shared_utils.load_json_data import load_json_postgres as raw_loader
 
 DAG_ID = 'events_flow'
 POSTGRES_CONN_ID = 'postgres'
-BASE_SQL_PATH = f'sql/postgres/{DAG_ID}'
+BASE_SQL_PATH = f'sql/{DAG_ID}'
 TARGET_TABLE = 'FLINK.EVENTS'
 
 
@@ -33,8 +37,30 @@ dag = DAG(
     tags=[DAG_ID, 'postgres', 'events']
 )
 
+
+def etl():
+    create_query = get_query(
+        f'{BASE_SQL_PATH}/create_staging/create_staging_table', extension='sql')
+    hook = PostgresHook(postgres_conn_id=POSTGRES_CONN_ID)
+    with hook.get_conn() as conn:
+        raw_data = raw_loader(conn=conn, query=create_query)
+    
+    logger.info(raw_data)
+    # tranform data
+    # load to final table
+
+
 validate_data = PythonOperator(
     dag=dag,
     task_id='validate_data',
     python_callable=validator
 )
+
+
+load_data = PythonOperator(
+    dag=dag,
+    task_id='load_data',
+    python_callable=etl
+)
+
+validate_data >> load_data
