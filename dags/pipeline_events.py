@@ -38,15 +38,14 @@ dag = DAG(
 )
 
 
-def etl():
-    create_query = get_query(
-        f'{BASE_SQL_PATH}/create_staging/create_staging_table', extension='sql')
-    hook = PostgresHook(postgres_conn_id=POSTGRES_CONN_ID)
-    with hook.get_conn() as conn:
-        raw_data = raw_loader(conn=conn, query=create_query)
+# def etl():
+#     create_query = get_query(
+#         f'{BASE_SQL_PATH}/create_staging/create_staging_table', extension='sql')
+#     hook = PostgresHook(postgres_conn_id=POSTGRES_CONN_ID)
+#     with hook.get_conn() as conn:
+#         raw_data = raw_loader(conn=conn, query=create_query)
     
-    logger.info(raw_data)
-    # tranform data
+    
     # load to final table
 
 
@@ -57,10 +56,8 @@ validate_data = PythonOperator(
 )
 
 
-load_data = PythonOperator(
-    dag=dag,
-    task_id='load_data',
-    python_callable=etl
-)
-
-validate_data >> load_data
+# load_data = PythonOperator(
+#     dag=dag,
+#     task_id='load_data',
+#     python_callable=etl
+# )

@@ -1,0 +1,52 @@
+version: 2.1
+
+jobs:
+  build:
+    docker:
+      - image: circleci/python:3.8.5
+        environment:
+          AIRFLOW_HOME: $CIRCLE_WORKING_DIRECTORY
+          AIRFLOW__CORE__LOAD_EXAMPLES: False
+          AIRFLOW__CORE__DAG_DISCOVERY_SAFE_MODE: False
+          STAGE: test
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip3 install -r requirements-dev.txt
+            pip3 install -r requirements.txt
+      - run:
+          name: Setup test environment
+          command: |
+            . venv/bin/activate
+            export PYTHONPATH=shared_utils:$PYTHONPATH
+            airflow db init
+      - run:
+         name: Lint code
+         command: make lint
+      - run:
+          name: Check import order
+          command: make check-imports
+      # run unit tests
+      - run:
+          name: Check dags
+          # check the dags are python executables
+          command: |
+            . venv/bin/activate
+            export PYTHONPATH=shared_utils:$PYTHONPATH
+            find dags -name '*.py' | xargs python
+      - run:
+          name: List dags
+          command: |
+            . venv/bin/activate
+            export PYTHONPATH=shared_utils:$PYTHONPATH
+            airflow dags list
+      # In case of unit test would store the artifacts
+      #- store_artifacts:
+      #    path: htmlcov
+
+  # add deployment to k8s
+

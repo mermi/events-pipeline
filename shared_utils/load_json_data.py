@@ -16,9 +16,11 @@ def create_table(conn, create_query):
 
 
 def load_json_postgres(conn, create_query):
+    create_table(conn, create_query)
+    
     with open('shared_utils/data/flink_data_engieering_sample_data.json', 'r') as data_file:
         data = json.load(data_file)
-    create_table(conn, create_query)
+    
     df = json_normalize(data)
 
     engine = create_engine(conn)

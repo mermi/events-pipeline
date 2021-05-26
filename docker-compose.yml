@@ -4,8 +4,8 @@ services:
         image: postgres:11.6
         environment:
             - POSTGRES_USER=flink
-            - POSTGRES_PASSWORD=pwd
-            - POSTGRES_DB=flink
+            - POSTGRES_PASSWORD=flink
+            - POSTGRES_DB=postgres
         volumes:
             - ./postgres_data:/var/lib/postgresql/data
         ports:
@@ -25,10 +25,10 @@ services:
             - STAGE=dev
             - POSTGRES_HOST=postgres
             - POSTGRES_USER=flink
-            - POSTGRES_PASSWORD=pwd
-            - POSTGRES_DB=flink
+            - POSTGRES_PASSWORD=flink
+            - POSTGRES_DB=postgres
             - POSTGRES_PORT=5432
-            - FERNET_KEY=NT11xtNNYFT8ERRnNagI3U8Ljam87IdzeAUowzg0BDc= # in staging/production this need to go to secrets
+            - FERNET_KEY=0Iq3RAaQkhhFgHOCpNRzWaXl-EyoCZLJfTYz87TvYSA= # generated in my terminal
             - WEB_SERVER_SECRET=f3ca0b3b85f540e1b2b72ad2021815e2
             # overwrite default values for local development
             - AIRFLOW__CORE__EXECUTOR=LocalExecutor
@@ -52,7 +52,6 @@ services:
             interval: 30s
             timeout: 30s
             retries: 6
-
     init:
         image: flink:latest
         command: airflow users create --username admin --password admin --firstname admin --lastname admin --role Admin --email admin@admin.org
@@ -63,7 +62,7 @@ services:
             - STAGE=dev
             - POSTGRES_HOST=postgres
             - POSTGRES_USER=flink
-            - POSTGRES_PASSWORD=pwd
-            - POSTGRES_DB=flink
+            - POSTGRES_PASSWORD=flink
+            - POSTGRES_DB=postgres
             - POSTGRES_PORT=5432
             - AIRFLOW__LOGGING__REMOTE_LOGGING=False
